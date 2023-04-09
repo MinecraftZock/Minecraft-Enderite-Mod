@@ -1,0 +1,29 @@
+name: Pull request
+
+on: [ pull_request ]
+
+jobs:
+  Build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: get version
+        run: |
+          export mcVersion=$(grep minecraft_version gradle.properties | cut -d= -f2)
+          export version=$(grep mod_version gradle.properties | xargs -n2 | tail -1)
+          echo "version=$version" >> $GITHUB_ENV
+          echo "mcVersion=$mcVersion" >> $GITHUB_ENV
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: 17
+      - name: build
+        run: ./gradlew build
+      - name: Upload version
+        uses: actions/upload-artifact@v3
+        with:
+          name: Enderite-Fabric-${{ env.version }}-mc${{ env.mcVersion }}
+          path: |
+            ./build/libs
